@@ -40,6 +40,7 @@ namespace SIFTestWinClient
                 byte[] messageBytes = Encoding.ASCII.GetBytes("Hi\n");
                 _ = client.Send(messageBytes);
 
+                client.ReceiveTimeout = 5000;
                 byte[] buffer = new byte[1024];
                 int byterecv = client.Receive(buffer);
                 var resp = Encoding.ASCII.GetString(buffer, 0, byterecv);
@@ -104,23 +105,30 @@ namespace SIFTestWinClient
                     textBox3.AppendText("Trying to open local port " + lport + "\r\n");
                     var udpport = Int32.Parse(lport.Trim());
                     UdpClient udpserver = new UdpClient(udpport);
+                    udpserver.Client.ReceiveTimeout = 5000;
                     textBox3.AppendText("Opened data channel on UDP" + lport + "\r\n");
 
                     byte[] messageBytes = Encoding.ASCII.GetBytes(command + "\n");
                     _ = client.Send(messageBytes);
                     textBox3.AppendText("Sending: " + command + "\r\n");
-
-                    while (true)
+                    try
                     {
-                        var remote = new IPEndPoint(IPAddress.Any, udpport);
-                        byte[] rdata = udpserver.Receive(ref remote);
-                        string recvd = Encoding.ASCII.GetString(rdata);
-                        textBox3.AppendText("Got: " + recvd + "\r\n");
-                        // udpserver.Send(new byte[] { 1 }, 1, remote);
-                        if (recvd.StartsWith("EXIT"))
+                        while (true)
                         {
-                            break;
+                            var remote = new IPEndPoint(IPAddress.Any, udpport);
+                            byte[] rdata = udpserver.Receive(ref remote);
+                            string recvd = Encoding.ASCII.GetString(rdata);
+                            textBox3.AppendText("Got: " + recvd + "\r\n");
+                            // udpserver.Send(new byte[] { 1 }, 1, remote);
+                            if (recvd.StartsWith("EXIT"))
+                            {
+                                break;
+                            }
                         }
+                    }
+                    catch (Exception ex)
+                    {
+                        textBox3.AppendText("Error:" + ex.Message);
                     }
                     udpserver.Close();
                     textBox3.AppendText("Closed data channel on UDP" + lport + "\r\n");

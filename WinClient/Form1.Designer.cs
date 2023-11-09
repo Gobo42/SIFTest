@@ -38,6 +38,7 @@
             button3 = new Button();
             textBox4 = new TextBox();
             label3 = new Label();
+            label4 = new Label();
             SuspendLayout();
             // 
             // textBox1
@@ -130,15 +131,26 @@
             label3.AutoSize = true;
             label3.Location = new Point(62, 251);
             label3.Name = "label3";
-            label3.Size = new Size(534, 74);
+            label3.Size = new Size(796, 74);
             label3.TabIndex = 9;
-            label3.Text = "use the command \"connect <port>\"\r\n<port> is the port that you want to listen to";
+            label3.Text = "use the command \"connect <port>\"\r\n<port> is the port that you want to listen to between 1024-65535";
+            // 
+            // label4
+            // 
+            label4.AutoSize = true;
+            label4.Font = new Font("Segoe UI", 5F, FontStyle.Regular, GraphicsUnit.Point);
+            label4.Location = new Point(855, 732);
+            label4.Name = "label4";
+            label4.Size = new Size(204, 20);
+            label4.TabIndex = 10;
+            label4.Text = "v1.0.0 by matt.hum@hpe.com";
             // 
             // Form1
             // 
             AutoScaleDimensions = new SizeF(15F, 37F);
             AutoScaleMode = AutoScaleMode.Font;
-            ClientSize = new Size(1094, 760);
+            ClientSize = new Size(1094, 756);
+            Controls.Add(label4);
             Controls.Add(label3);
             Controls.Add(textBox4);
             Controls.Add(button3);
@@ -167,5 +179,6 @@
         private Button button3;
         private TextBox textBox4;
         private Label label3;
+        private Label label4;
     }
 }
