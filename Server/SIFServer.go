@@ -5,10 +5,8 @@ import (
 	"fmt"
 	"net"
 	"strings"
+	"time"
 )
-
-const MIN = 1
-const MAX = 100
 
 func handleConnection(c net.Conn) {
 	fmt.Printf("Got a connection from %s\n", c.RemoteAddr().String())
@@ -32,7 +30,7 @@ func handleConnection(c net.Conn) {
 			rip := m[0]
 			n := strings.Split(temp, " ")
 			rport := n[1]
-			fmt.Printf("Trying to connect to %s:%s\n", rip, rport)
+			time.Sleep(100 * time.Millisecond)
 			rserver, err := net.ResolveUDPAddr("udp4", rip+":"+rport)
 			if err != nil {
 				fmt.Println("Couldn't resolve remote server", err.Error())
@@ -44,6 +42,7 @@ func handleConnection(c net.Conn) {
 				break
 			}
 			fmt.Printf("Connected to %s\n", u.RemoteAddr().String())
+			time.Sleep(400 * time.Millisecond)
 			_, err = u.Write([]byte("This is the first bit of data\n"))
 			_, err = u.Write([]byte("This is the second line of data\n"))
 			_, err = u.Write([]byte("EXIT\n"))
@@ -53,7 +52,6 @@ func handleConnection(c net.Conn) {
 		} else {
 			c.Write([]byte("Unknown: " + string(netData)))
 		}
-
 	}
 	c.Close()
 
