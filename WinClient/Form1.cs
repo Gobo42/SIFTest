@@ -26,7 +26,9 @@ namespace SIFTestWinClient
         // ID for the About item on the system menu
         private int SYSMENU_ABOUT_ID = 0x1;
 
-        private bool Connected;
+        private bool Connected = false;
+        const string myVer = "1.0.1";
+
         private Socket client { get; set; }
 
         public Form1()
@@ -46,6 +48,7 @@ namespace SIFTestWinClient
 
             // Add the About menu item
             AppendMenu(hSysMenu, MF_STRING, SYSMENU_ABOUT_ID, "&About…");
+            label4.Text = "v" + myVer + " by matt.hum@hpe.com";
         }
 
         protected override void WndProc(ref Message m)
@@ -55,7 +58,7 @@ namespace SIFTestWinClient
             // Test if the About item was selected from the system menu
             if ((m.Msg == WM_SYSCOMMAND) && ((int)m.WParam == SYSMENU_ABOUT_ID))
             {
-                string message = "Server Initiated Flow Test\r\n         by Matt Hum\r\n    matt.hum@hpe.com";
+                string message = "Server Initiated Flow Test\r\n     v" + myVer + " by Matt Hum\r\n    matt.hum@hpe.com";
                 string title = "About SIFTest";
                 MessageBox.Show(message, title, MessageBoxButtons.OK, MessageBoxIcon.Question);
             }
@@ -76,11 +79,16 @@ namespace SIFTestWinClient
             ServerPort = textBox2.Text.Trim();
             textBox3.AppendText("Connecting to " + ServerAddr + ":" + ServerPort + "\r\n");
             button1.Enabled = false;
+            IPAddress rServerIP = IPAddress.None;
 
             try
             {
-                IPHostEntry ipHostInfo = await Dns.GetHostEntryAsync(ServerAddr);
-                IPAddress rServerIP = ipHostInfo.AddressList[0];
+                if (!IPAddress.TryParse(ServerAddr, out rServerIP))
+                {
+                    IPHostEntry ipHostInfo = await Dns.GetHostEntryAsync(ServerAddr);
+                    rServerIP = ipHostInfo.AddressList[0];
+                    textBox3.AppendText("Resolved " + ServerAddr + " to " + rServerIP.ToString() + "\r\n");
+                }
                 IPEndPoint ServerIP = new(rServerIP, Int32.Parse(ServerPort));
 
                 client = new Socket(ServerIP.AddressFamily, SocketType.Stream, ProtocolType.Tcp);
@@ -124,6 +132,7 @@ namespace SIFTestWinClient
             {
                 button1.Enabled = true;
                 textBox3.AppendText($"Socket Error: {err.Message}\r\n");
+                textBox3.AppendText("tried: " + rServerIP.ToString() + ":" + ServerPort + "\r\n");
             }
 
         }
@@ -143,7 +152,7 @@ namespace SIFTestWinClient
 
         private void button3_Click(object sender, EventArgs e)
         {
-            var command = textBox4.Text.Trim();
+            var command = textBox4.Text.Trim().ToLower();
             if (command != "")
             {
                 textBox4.Text = "";
@@ -152,10 +161,11 @@ namespace SIFTestWinClient
                     var lport = command.Split(' ')[1];
                     textBox3.AppendText("Trying to open local port " + lport + "\r\n");
                     var udpport = Int32.Parse(lport.Trim());
-                    UdpClient udpserver = new UdpClient(udpport);
-                    udpserver.Client.ReceiveTimeout = 5000;
+                    Socket udpsock = new Socket(AddressFamily.InterNetwork, SocketType.Dgram, ProtocolType.Udp);
+                    EndPoint epFrom = new IPEndPoint(IPAddress.Any, udpport);
+                    udpsock.SetSocketOption(SocketOptionLevel.IP, SocketOptionName.ReuseAddress, true);
+                    udpsock.Bind(epFrom);
                     textBox3.AppendText("Opened data channel on UDP" + lport + "\r\n");
-
                     byte[] messageBytes = Encoding.ASCII.GetBytes(command + "\n");
                     _ = client.Send(messageBytes);
                     textBox3.AppendText("Sending: " + command + "\r\n");
@@ -163,23 +173,27 @@ namespace SIFTestWinClient
                     {
                         while (true)
                         {
-                            var remote = new IPEndPoint(IPAddress.Any, udpport);
-                            byte[] rdata = udpserver.Receive(ref remote);
+                            byte[] rdata = new byte[1024];
+                            udpsock.ReceiveFrom(rdata, ref epFrom);
                             string recvd = Encoding.ASCII.GetString(rdata);
-                            textBox3.AppendText("Got: " + recvd + "\r\n");
-                            // udpserver.Send(new byte[] { 1 }, 1, remote);
                             if (recvd.StartsWith("EXIT"))
                             {
                                 break;
                             }
+                            textBox3.AppendText("Got [" + epFrom.ToString() + "]: " + recvd);
+                            textBox3.AppendText("\r\n");
                         }
                     }
                     catch (Exception ex)
                     {
                         textBox3.AppendText("Error:" + ex.Message + "\r\n");
                     }
-                    udpserver.Close();
-                    textBox3.AppendText("Closed data channel on UDP" + lport + "\r\n");
+                    finally
+                    {
+                        textBox3.AppendText("Closed data channel on UDP" + lport + "\r\n");
+                        udpsock.Close();
+                    }
+
                 }
                 else if (command.StartsWith("exit"))
                 {
