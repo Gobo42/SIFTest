@@ -182,12 +182,12 @@
             // 
             label4.Anchor = AnchorStyles.Bottom | AnchorStyles.Right;
             label4.Font = new Font("Segoe UI", 5F, FontStyle.Regular, GraphicsUnit.Point);
-            label4.Location = new Point(860, 722);
+            label4.Location = new Point(664, 722);
             label4.Margin = new Padding(4, 0, 4, 0);
             label4.Name = "label4";
-            label4.Size = new Size(204, 20);
+            label4.Size = new Size(400, 20);
             label4.TabIndex = 10;
-            label4.Text = "v1.0.1 by matt.hum@hpe.com";
+            label4.Text = "v1.0.2 by matt.hum@hpe.com";
             label4.TextAlign = ContentAlignment.MiddleRight;
             // 
             // pictureBox1

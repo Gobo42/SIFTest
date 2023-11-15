@@ -27,7 +27,7 @@ namespace SIFTestWinClient
         private int SYSMENU_ABOUT_ID = 0x1;
 
         private bool Connected = false;
-        const string myVer = "1.0.1";
+        const string myVer = "1.0.2";
 
         private Socket client { get; set; }
 
@@ -165,6 +165,7 @@ namespace SIFTestWinClient
                     EndPoint epFrom = new IPEndPoint(IPAddress.Any, udpport);
                     udpsock.SetSocketOption(SocketOptionLevel.IP, SocketOptionName.ReuseAddress, true);
                     udpsock.Bind(epFrom);
+                    udpsock.ReceiveTimeout = 10000;
                     textBox3.AppendText("Opened data channel on UDP" + lport + "\r\n");
                     byte[] messageBytes = Encoding.ASCII.GetBytes(command + "\n");
                     _ = client.Send(messageBytes);
@@ -174,7 +175,7 @@ namespace SIFTestWinClient
                         while (true)
                         {
                             byte[] rdata = new byte[1024];
-                            udpsock.ReceiveFrom(rdata, ref epFrom);
+                            udpsock.ReceiveFrom(rdata, SocketFlags.Partial, ref epFrom);
                             string recvd = Encoding.ASCII.GetString(rdata);
                             if (recvd.StartsWith("EXIT"))
                             {
