@@ -70,6 +70,7 @@ func handleConnection(c net.Conn) {
 					panic(err)
 				}
 			}
+			time.Sleep(250 * time.Millisecond)
 			_, err = u.Write([]byte("EXIT\n"))
 			fmt.Println("Sent Data!")
 			u.Close()
