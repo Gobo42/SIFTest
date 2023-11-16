@@ -9,7 +9,6 @@ import (
 )
 
 func main() {
-
 	fmt.Print("Server IP: ")
 	reader := bufio.NewReader(os.Stdin)
 	server, _ := reader.ReadString('\n')
@@ -55,7 +54,6 @@ func main() {
 				fmt.Println("Couldn't open ", l, " for listening: ", err.Error())
 				os.Exit(2)
 			}
-			defer conn.Close()
 			for {
 				message := make([]byte, 1024)
 				rlen, remote, err := conn.ReadFromUDP(message[:])
@@ -69,6 +67,7 @@ func main() {
 				}
 			}
 			fmt.Println("Done getting stuff from server.")
+			conn.Close()
 		} else {
 			reply := make([]byte, 1024)
 			_, err = conn.Read(reply)
@@ -78,8 +77,6 @@ func main() {
 			}
 			fmt.Print("Reply from server:", string(reply))
 		}
-
 	}
 	conn.Close()
-
 }
